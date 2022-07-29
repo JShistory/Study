@@ -1,51 +1,41 @@
 import math
+
 def timetoint(n):
     sum = 0
-    time = n.split(":")
-    a=0
-    b=0
-    a = (int(ord(time[0][0])) - int(ord('0'))) * 10
-    a += int(ord(time[0][1])) - int(ord('0'))
-    a *=60
-    b = (int(ord(time[1][0])) - int(ord('0'))) * 10
-    b += int(ord(time[1][1])) - int(ord('0'))
-    sum = a+b
-    return sum
-fees = [180, 5000, 10, 600]
-records = ["05:34 5961 IN", "06:00 0000 IN", "06:34 0000 OUT", "07:59 5961 OUT", "07:59 0148 IN", "18:59 0000 IN", "19:09 0148 OUT", "22:59 5961 IN", "23:00 5961 OUT"]
+    h,m = map(int, n.split(":"))
+    return h*60 + m
 
-answer = [0] * len(records)
-fee_array = {}
-cars_parking = {}
-
-
-
-a = 0
-for car in records:
-    if car.split()[1] in cars_parking:
-        a = timetoint(car.split()[0]) - timetoint(cars_parking[car.split()[1]])
+def solution(fees, records):
+    
+    dt, df, ut, uf = fees
+    answer = []
+    fee_array = {}
+    cars_parking = {}
+    stay_minute = 0
+    for car in records:
+        #만약 넣으려는 값이 안에 있으면 처리
+        if car.split()[1] in cars_parking:
+            stay_minute = timetoint(car.split()[0]) - cars_parking[car.split()[1]]
+            fee_array[car.split()[1]] += stay_minute
+            del cars_parking[car.split()[1]]
+            continue
+        
+        cars_parking[car.split()[1]] = timetoint(car.split()[0])
+        #만약에 fee_array에 값이 있으면 패스하고 없으면 0으로 선 초기화
         if car.split()[1] in fee_array:
-            fee_array[car.split()[1]] +=a
+            pass
         else:
-            fee_array[car.split()[1]] = a
-        a=0
-        del cars_parking[car.split()[1]]
-        continue
-    cars_parking[car.split()[1]] = car.split()[0]
-
-for car in cars_parking.keys():
-    a = timetoint('23:59') - timetoint(cars_parking[car])
-    fee_array[car] +=a
-fee_list = sorted(fee_array.items())
-
-car_fee = [0] * len(fee_list)
-for car in range(len(fee_list)):
-    a = fee_list[car][1]
-    if a <= 180:
-        car_fee[car] = 5000
-    else:
-        car_fee[car] = 5000+math.ceil((a - 180) / 10) * 600
-
-
-
-print(car_fee)
+            fee_array[car.split()[1]] = 0
+    #out이 없는 애들 처리
+    for car in cars_parking.keys():
+        fee_array[car] += timetoint('23:59') - cars_parking[car]
+    
+    list_fee_array = list(fee_array.items())
+    list_fee_array.sort(key = lambda x:x[0])
+    print(list_fee_array[0][1])
+    for car in list_fee_array:
+        if car[1] <= dt:
+            answer.append(df)
+        else:
+            answer.append(df+math.ceil((car[1]-dt) / ut) * uf)
+    return answer
